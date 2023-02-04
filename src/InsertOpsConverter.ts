@@ -20,15 +20,15 @@ class InsertOpsConverter {
       return [];
     }
 
-    var denormalizedOps = [].concat.apply(
+    let denormalizedOps: any = [].concat.apply(
       [],
-      deltaOps.map(InsertOpDenormalizer.denormalize)
+      deltaOps.map(InsertOpDenormalizer.denormalize) as any
     );
-    var results: DeltaInsertOp[] = [];
+    let results: DeltaInsertOp[] = [];
 
-    var insertVal, attributes;
+    let insertVal, attributes;
 
-    for (var op of denormalizedOps) {
+    for (let op of denormalizedOps) {
       if (!op.insert) {
         continue;
       }

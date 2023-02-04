@@ -36,8 +36,8 @@ export const DEFAULT_INLINE_STYLES: IInlineStyles = {
     huge: 'font-size: 2.5em',
   },
   indent: (value, op) => {
-    var indentSize = parseInt(value, 10) * 3;
-    var side = op.attributes['direction'] === 'rtl' ? 'right' : 'left';
+    let indentSize = parseInt(value, 10) * 3;
+    let side = op.attributes['direction'] === 'rtl' ? 'right' : 'left';
     return 'padding-' + side + ':' + indentSize + 'em';
   },
   direction: (value, op) => {
@@ -99,7 +99,7 @@ class OpToHtmlConverter {
   }
 
   getHtml(): string {
-    var parts = this.getHtmlParts();
+    let parts = this.getHtmlParts();
     return parts.openingTag + parts.content + parts.closingTag;
   }
 
@@ -120,7 +120,7 @@ class OpToHtmlConverter {
     const imgTag = 'img';
     const isImageLink = (tag: any) =>
       tag === imgTag && !!this.op.attributes.link;
-    for (var tag of tags) {
+    for (let tag of tags) {
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
@@ -150,14 +150,14 @@ class OpToHtmlConverter {
       return this.op.insert.value;
     }
 
-    var content =
+    let content =
       this.op.isFormula() || this.op.isText() ? this.op.insert.value : '';
 
     return (this.options.encodeHtml && encodeHtml(content)) || content;
   }
 
   getCssClasses(): string[] {
-    var attrs: any = this.op.attributes;
+    let attrs: any = this.op.attributes;
 
     type Str2StrType = { (x: string): string };
 
@@ -165,7 +165,7 @@ class OpToHtmlConverter {
       return [];
     }
 
-    var propsArr = ['indent', 'align', 'direction', 'font', 'size'];
+    let propsArr = ['indent', 'align', 'direction', 'font', 'size'];
     if (this.options.allowBackgroundClasses) {
       propsArr.push('background');
     }
@@ -186,9 +186,9 @@ class OpToHtmlConverter {
   }
 
   getCssStyles(): string[] {
-    var attrs: any = this.op.attributes;
+    let attrs: any = this.op.attributes;
 
-    var propsArr = [['color']];
+    let propsArr = [['color']];
     if (!!this.options.inlineStyles || !this.options.allowBackgroundClasses) {
       propsArr.push(['background', 'background-color']);
     }
@@ -218,7 +218,7 @@ class OpToHtmlConverter {
             if (typeof attributeConverter === 'object') {
               return attributeConverter[attrValue];
             } else if (typeof attributeConverter === 'function') {
-              var converterFn = attributeConverter as (
+              let converterFn = attributeConverter as (
                 value: string,
                 op: DeltaInsertOp
               ) => string;
@@ -239,12 +239,12 @@ class OpToHtmlConverter {
     const makeAttr = this.makeAttr.bind(this);
     const customTagAttributes = this.getCustomTagAttributes();
     const customAttr = customTagAttributes
-      ? Object.keys(this.getCustomTagAttributes()).map((k) =>
+      ? Object.keys(this.getCustomTagAttributes() || {}).map((k) =>
           makeAttr(k, customTagAttributes[k])
         )
       : [];
-    var classes = this.getCssClasses();
-    var tagAttrs = classes.length
+    let classes = this.getCssClasses();
+    let tagAttrs = classes.length
       ? customAttr.concat([makeAttr('class', classes.join(' '))])
       : customAttr;
 
@@ -275,7 +275,7 @@ class OpToHtmlConverter {
     }
 
     if (this.op.isMentions()) {
-      var mention: IMention = this.op.attributes.mention!;
+      let mention: IMention = this.op.attributes.mention!;
       if (mention.class) {
         tagAttrs = tagAttrs.concat(makeAttr('class', mention.class));
       }
@@ -292,7 +292,7 @@ class OpToHtmlConverter {
       return tagAttrs;
     }
 
-    var styles = this.getCssStyles();
+    let styles = this.getCssStyles();
     if (styles.length) {
       tagAttrs.push(makeAttr('style', styles.join(';')));
     }
@@ -370,6 +370,7 @@ class OpToHtmlConverter {
         return Array.isArray(res) ? res : [res];
       }
     }
+    return undefined;
   }
 
   getCustomCssStyles() {
@@ -382,10 +383,11 @@ class OpToHtmlConverter {
         return Array.isArray(res) ? res : [res];
       }
     }
+    return undefined;
   }
 
   getTags(): string[] {
-    var attrs: any = this.op.attributes;
+    let attrs: any = this.op.attributes;
 
     // embeds
     if (!this.op.isText()) {
@@ -395,9 +397,9 @@ class OpToHtmlConverter {
     }
 
     // blocks
-    var positionTag = this.options.paragraphTag || 'p';
+    let positionTag = this.options.paragraphTag || 'p';
 
-    var blocks = [
+    let blocks = [
       ['blockquote'],
       ['code-block', 'pre'],
       ['list', this.options.listItemTag],
@@ -406,8 +408,8 @@ class OpToHtmlConverter {
       ['direction', positionTag],
       ['indent', positionTag],
     ];
-    for (var item of blocks) {
-      var firstItem = item[0]!;
+    for (let item of blocks) {
+      let firstItem = item[0]!;
       if (attrs[firstItem]) {
         const customTag = this.getCustomTag(firstItem);
         return customTag

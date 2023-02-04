@@ -3,12 +3,12 @@ import { flatten, groupConsecutiveElementsWhile } from './../helpers/array';
 
 class ListNester {
   nest(groups: TDataGroup[]): TDataGroup[] {
-    var listBlocked = this.convertListBlocksToListGroups(groups);
-    var groupedByListGroups = this.groupConsecutiveListGroups(listBlocked);
+    let listBlocked = this.convertListBlocksToListGroups(groups);
+    let groupedByListGroups = this.groupConsecutiveListGroups(listBlocked);
 
     // convert grouped ones into listgroup
-    var nested = flatten(
-      groupedByListGroups.map((group: TDataGroup) => {
+    let nested = flatten(
+      groupedByListGroups.map((group: TDataGroup | ListGroup[]) => {
         if (!Array.isArray(group)) {
           return group;
         }
@@ -16,7 +16,7 @@ class ListNester {
       })
     );
 
-    var groupRootLists = groupConsecutiveElementsWhile(
+    let groupRootLists = groupConsecutiveElementsWhile(
       nested,
       (curr: TDataGroup, prev: TDataGroup) => {
         if (!(curr instanceof ListGroup && prev instanceof ListGroup)) {
@@ -30,7 +30,7 @@ class ListNester {
       if (!Array.isArray(v)) {
         return v;
       }
-      var litems = v.map((g: ListGroup): ListItem[] => g.items);
+      let litems = v.map((g: ListGroup): ListItem[] => g.items);
       return new ListGroup(flatten(litems));
     });
   }
@@ -38,7 +38,7 @@ class ListNester {
   private convertListBlocksToListGroups(
     items: TDataGroup[]
   ): Array<TDataGroup> {
-    var grouped = groupConsecutiveElementsWhile(
+    let grouped = groupConsecutiveElementsWhile(
       items,
       (g: TDataGroup, gPrev: TDataGroup) => {
         return (
@@ -75,7 +75,7 @@ class ListNester {
   }
 
   private nestListSection(sectionItems: ListGroup[]): ListGroup[] {
-    var indentGroups = this.groupByIndent(sectionItems);
+    let indentGroups = this.groupByIndent(sectionItems);
 
     Object.keys(indentGroups)
       .map(Number)
@@ -83,7 +83,7 @@ class ListNester {
       .reverse()
       .forEach((indent) => {
         indentGroups[indent].forEach((lg: ListGroup) => {
-          var idx = sectionItems.indexOf(lg);
+          let idx = sectionItems.indexOf(lg);
           if (this.placeUnderParent(lg, sectionItems.slice(0, idx))) {
             sectionItems.splice(idx, 1);
           }
@@ -95,7 +95,7 @@ class ListNester {
   private groupByIndent(items: ListGroup[]): { [index: number]: ListGroup[] } {
     return items.reduce(
       (pv: { [index: number]: ListGroup[] }, cv: ListGroup) => {
-        var indent = cv.items[0].item.op.attributes.indent;
+        let indent = cv.items[0].item.op.attributes.indent;
         if (indent) {
           pv[indent] = pv[indent] || [];
           pv[indent].push(cv);
@@ -107,10 +107,10 @@ class ListNester {
   }
 
   private placeUnderParent(target: ListGroup, items: ListGroup[]) {
-    for (var i = items.length - 1; i >= 0; i--) {
-      var elm = items[i];
+    for (let i = items.length - 1; i >= 0; i--) {
+      let elm = items[i];
       if (target.items[0].item.op.hasHigherIndentThan(elm.items[0].item.op)) {
-        var parent = elm.items[elm.items.length - 1];
+        let parent = elm.items[elm.items.length - 1];
         if (parent.innerList) {
           parent.innerList.items = parent.innerList.items.concat(target.items);
         } else {
