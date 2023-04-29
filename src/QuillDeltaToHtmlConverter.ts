@@ -5,7 +5,11 @@ import {
   IInlineStyles,
 } from './OpToHtmlConverter';
 import { DeltaInsertOp } from './DeltaInsertOp';
-import { Grouper } from './grouper/Grouper';
+import {
+  groupConsecutiveSameStyleBlocks,
+  pairOpsWithTheirBlock,
+  reduceConsecutiveSameStyleBlocksToOne,
+} from './grouper/Grouper';
 import {
   VideoItem,
   InlineGroup,
@@ -66,7 +70,7 @@ class QuillDeltaToHtmlConverter {
       options,
       {
         orderedListTag: 'ol',
-        bulletListTag: 'ul',
+        bulletListTag: 'ol',
         listItemTag: 'li',
       }
     );
@@ -112,22 +116,20 @@ class QuillDeltaToHtmlConverter {
   getGroupedOps(): TDataGroup[] {
     var deltaOps = InsertOpsConverter.convert(this.rawDeltaOps, this.options);
 
-    var pairedOps = Grouper.pairOpsWithTheirBlock(deltaOps);
+    var pairedOps = pairOpsWithTheirBlock(deltaOps);
 
-    var groupedSameStyleBlocks = Grouper.groupConsecutiveSameStyleBlocks(
-      pairedOps,
-      {
-        blockquotes: !!this.options.multiLineBlockquote,
-        header: !!this.options.multiLineHeader,
-        codeBlocks: !!this.options.multiLineCodeblock,
-        customBlocks: !!this.options.multiLineCustomBlock,
-      }
-    );
+    var groupedSameStyleBlocks = groupConsecutiveSameStyleBlocks(pairedOps, {
+      blockquotes: !!this.options.multiLineBlockquote,
+      header: !!this.options.multiLineHeader,
+      codeBlocks: !!this.options.multiLineCodeblock,
+      customBlocks: !!this.options.multiLineCustomBlock,
+    });
 
-    var groupedOps = Grouper.reduceConsecutiveSameStyleBlocksToOne(
+    var groupedOps = reduceConsecutiveSameStyleBlocksToOne(
       groupedSameStyleBlocks
     );
 
+    // table
     var tableGrouper = new TableGrouper();
     groupedOps = tableGrouper.group(groupedOps);
 
@@ -139,14 +141,17 @@ class QuillDeltaToHtmlConverter {
     let groups = this.getGroupedOps();
     return groups
       .map((group) => {
+        // list
         if (group instanceof ListGroup) {
           return this._renderWithCallbacks(GroupType.List, group, () =>
             this._renderList(<ListGroup>group)
           );
+          // table
         } else if (group instanceof TableGroup) {
           return this._renderWithCallbacks(GroupType.Table, group, () =>
             this._renderTable(<TableGroup>group)
           );
+          // block
         } else if (group instanceof BlockGroup) {
           var g = <BlockGroup>group;
 
@@ -155,6 +160,7 @@ class QuillDeltaToHtmlConverter {
           );
         } else if (group instanceof BlotBlock) {
           return this._renderCustom(group.op, null);
+          // video
         } else if (group instanceof VideoItem) {
           return this._renderWithCallbacks(GroupType.Video, group, () => {
             var g = <VideoItem>group;
@@ -196,6 +202,7 @@ class QuillDeltaToHtmlConverter {
     return html;
   }
 
+  // ----- LIST -----
   _renderList(list: ListGroup): string {
     var firstItem = list.items[0];
     return (
@@ -207,7 +214,7 @@ class QuillDeltaToHtmlConverter {
 
   _renderListItem(li: ListItem): string {
     //if (!isOuterMost) {
-    li.item.op.attributes.indent = 0;
+    li.item.op.attributes.indent = li.item.op.attributes.indent || 0;
     //}
     var converter = new OpToHtmlConverter(li.item.op, this.converterOptions);
     var parts = converter.getHtmlParts();
@@ -219,7 +226,9 @@ class QuillDeltaToHtmlConverter {
       parts.closingTag
     );
   }
+  // ----- LIST END -----
 
+  // ----- TABLE -----
   _renderTable(table: TableGroup): string {
     return (
       makeStartTag('table') +
@@ -253,6 +262,7 @@ class QuillDeltaToHtmlConverter {
       makeEndTag('td')
     );
   }
+  // ----- TABLE END -----
 
   _renderBlock(bop: DeltaInsertOp, ops: DeltaInsertOp[]) {
     var converter = new OpToHtmlConverter(bop, this.converterOptions);

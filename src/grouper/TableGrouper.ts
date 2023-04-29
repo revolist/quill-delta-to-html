@@ -7,6 +7,9 @@ import {
 } from './group-types';
 import { groupConsecutiveElementsWhile } from '../helpers/array';
 
+/**
+ * Converts consecutive table blocks into TableGroup
+ */
 export class TableGrouper {
   group(groups: TDataGroup[]): TDataGroup[] {
     var tableBlocked = this.convertTableBlocksToTableGroups(groups);

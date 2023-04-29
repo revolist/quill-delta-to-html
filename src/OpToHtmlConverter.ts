@@ -117,15 +117,27 @@ class OpToHtmlConverter {
 
     let beginTags = [],
       endTags = [];
+
+    // image
     const imgTag = 'img';
     const isImageLink = (tag: any) =>
       tag === imgTag && !!this.op.attributes.link;
+
     for (let tag of tags) {
+      // image
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
       beginTags.push(makeStartTag(tag, attrs));
+      // list
+      if (this.op.isList()) {
+        beginTags.push(
+          makeStartTag('span', this.getListItemAttrs(this.op)),
+          makeEndTag('span')
+        );
+      }
       endTags.push(tag === 'img' ? '' : makeEndTag(tag));
+      // image link
       if (isImageLink(tag)) {
         endTags.push(makeEndTag('a'));
       }
@@ -248,6 +260,7 @@ class OpToHtmlConverter {
       ? customAttr.concat([makeAttr('class', classes.join(' '))])
       : customAttr;
 
+    // IMAGE
     if (this.op.isImage()) {
       this.op.attributes.width &&
         (tagAttrs = tagAttrs.concat(
@@ -255,17 +268,21 @@ class OpToHtmlConverter {
         ));
       return tagAttrs.concat(makeAttr('src', this.op.insert.value));
     }
-
+    // LIST
     if (this.op.isACheckList()) {
       return tagAttrs.concat(
-        makeAttr('data-checked', this.op.isCheckedList() ? 'true' : 'false')
+        makeAttr('data-list', this.op.isCheckedList() ? 'checked' : 'unchecked')
       );
+    } else if (this.op.isBulletList()) {
+      return tagAttrs.concat(makeAttr('data-list', 'bullet'));
+    } else if (this.op.isOrderedList()) {
+      return tagAttrs.concat(makeAttr('data-list', 'ordered'));
     }
-
+    // FORMULA
     if (this.op.isFormula()) {
       return tagAttrs;
     }
-
+    // VIDEO
     if (this.op.isVideo()) {
       return tagAttrs.concat(
         makeAttr('frameborder', '0'),
@@ -274,6 +291,7 @@ class OpToHtmlConverter {
       );
     }
 
+    // MENTION
     if (this.op.isMentions()) {
       let mention: IMention = this.op.attributes.mention!;
       if (mention.class) {
@@ -297,6 +315,7 @@ class OpToHtmlConverter {
       tagAttrs.push(makeAttr('style', styles.join(';')));
     }
 
+    // CODE-BLOCK
     if (
       this.op.isCodeBlock() &&
       typeof this.op.attributes['code-block'] === 'string'
@@ -309,7 +328,7 @@ class OpToHtmlConverter {
     if (this.op.isContainerBlock()) {
       return tagAttrs;
     }
-
+    // LINK
     if (this.op.isLink()) {
       tagAttrs = tagAttrs.concat(this.getLinkAttrs());
     }
@@ -319,6 +338,15 @@ class OpToHtmlConverter {
 
   makeAttr(k: string, v: string): ITagKeyValue {
     return { key: k, value: v };
+  }
+
+  getListItemAttrs(op: DeltaInsertOp): Array<ITagKeyValue> {
+    const tagAttrs: ITagKeyValue[] = [];
+    tagAttrs.push(
+      this.makeAttr('class', 'ql-ui'),
+      this.makeAttr('contenteditable', 'false')
+    );
+    return tagAttrs;
   }
 
   getLinkAttrs(): Array<ITagKeyValue> {
