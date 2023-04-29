@@ -39,7 +39,6 @@ class InsertOpsConverter {
       }
 
       attributes = OpAttributeSanitizer.sanitize(op.attributes, options);
-      console.log(attributes);
       results.push(new DeltaInsertOp(insertVal, attributes));
     }
     return results;
