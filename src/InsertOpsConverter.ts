@@ -61,26 +61,32 @@ class InsertOpsConverter {
       return null;
     }
 
-    return DataType.Image in insertPropVal
-      ? new InsertDataQuill(
-          DataType.Image,
-          OpLinkSanitizer.sanitize(
-            insertPropVal[DataType.Image] + '',
-            sanitizeOptions
-          )
+    if (DataType.Image in insertPropVal) {
+      return new InsertDataQuill(
+        DataType.Image,
+        OpLinkSanitizer.sanitize(
+          insertPropVal[DataType.Image] + '',
+          sanitizeOptions
         )
-      : DataType.Video in insertPropVal
-      ? new InsertDataQuill(
-          DataType.Video,
-          OpLinkSanitizer.sanitize(
-            insertPropVal[DataType.Video] + '',
-            sanitizeOptions
-          )
+      );
+    }
+
+    if (DataType.Video in insertPropVal) {
+      return new InsertDataQuill(
+        DataType.Video,
+        OpLinkSanitizer.sanitize(
+          insertPropVal[DataType.Video] + '',
+          sanitizeOptions
         )
-      : DataType.Formula in insertPropVal
-      ? new InsertDataQuill(DataType.Formula, insertPropVal[DataType.Formula])
-      : // custom
-        new InsertDataCustom(keys[0], insertPropVal[keys[0]]);
+      );
+    }
+    if (DataType.Formula in insertPropVal) {
+      return new InsertDataQuill(
+        DataType.Formula,
+        insertPropVal[DataType.Formula]
+      );
+    }
+    return new InsertDataCustom(keys[0], insertPropVal[keys[0]]);
   }
 }
 

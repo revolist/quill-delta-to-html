@@ -473,19 +473,21 @@ class OpToHtmlConverter {
       ['code'],
     ];
 
-    return [
-      ...inlineTags.filter((item: string[]) => !!attrs[item[0]]),
+    const inline = inlineTags.filter((item: string[]) => !!attrs[item[0]]);
+    const tags = [
+      ...inline,
       ...Object.keys(customTagsMap)
         .filter((t) => !inlineTags.some((it) => it[0] == t))
         .map((t) => [t, customTagsMap[t]]),
-    ].map((item) => {
-      return customTagsMap[item[0]]
-        ? customTagsMap[item[0]]
-        : item[0] === 'script'
-        ? attrs[item[0]] === ScriptType.Sub
-          ? 'sub'
-          : 'sup'
-        : arr.preferSecond(item)!;
+    ];
+    return tags.map((item) => {
+      if (customTagsMap[item[0]]) {
+        return customTagsMap[item[0]];
+      }
+      if (item[0] === 'script') {
+        return attrs[item[0]] === ScriptType.Sub ? 'sub' : 'sup';
+      }
+      return arr.preferSecond(item)!;
     });
   }
 }
