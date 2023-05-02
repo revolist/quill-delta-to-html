@@ -10,6 +10,7 @@ import * as obj from './helpers/object';
 import { IMention } from './mentions/MentionSanitizer';
 import * as arr from './helpers/array';
 import { OpAttributeSanitizer } from './OpAttributeSanitizer';
+import { h, VNode } from '@stencil/core';
 
 export type InlineStyleType =
   | ((value: string, op: DeltaInsertOp) => string | undefined)
@@ -98,59 +99,68 @@ class OpToHtmlConverter {
     return this.options.classPrefix + '-' + className;
   }
 
-  getHtml(): string {
-    let parts = this.getHtmlParts();
-    return parts.openingTag + parts.content + parts.closingTag;
-  }
-
-  getHtmlParts(): IHtmlParts {
+  getHtmlParts(): VNode | undefined {
     if (this.op.isJustNewline() && !this.op.isContainerBlock()) {
-      return { openingTag: '', closingTag: '', content: NewLine };
+      return h('br');
     }
 
     let tags = this.getTags(),
       attrs = this.getTagAttributes();
 
     if (!tags.length && attrs.length) {
-      tags.push('span');
+      tags.push(h('span'));
     }
 
-    let beginTags = [],
-      endTags = [];
+    // let beginTags = [],
+    //   endTags = [];
 
     // image
     const imgTag = 'img';
     const isImageLink = (tag: any) =>
       tag === imgTag && !!this.op.attributes.link;
 
+    let holder: VNode | undefined;
+    let content: VNode | undefined;
+
     for (let tag of tags) {
+      let parent: VNode = tag;
+      tag.$attrs$ = attrs.reduce((acc: Record<string, string>, cur) => {
+        if (cur.key && cur.value) {
+          acc[cur.key] = cur.value;
+        }
+        return acc;
+      }, {});
       // image
-      if (isImageLink(tag)) {
-        beginTags.push(makeStartTag('a', this.getLinkAttrs()));
+      if (isImageLink(tag.$tag$)) {
+        parent = h('a', this.getLinkAttrs(), tag);
       }
-      beginTags.push(makeStartTag(tag, attrs));
       // list
       if (this.op.isList()) {
-        beginTags.push(
-          makeStartTag('span', this.getListItemAttrs(this.op)),
-          makeEndTag('span')
+        const attr = this.getListItemAttrs(this.op).reduce(
+          (acc: Record<string, string>, cur) => {
+            if (cur.key && cur.value) {
+              acc[cur.key] = cur.value;
+            }
+            return acc;
+          },
+          {}
         );
+        const liContent = h('span', attr);
+        parent.$children$ = [liContent];
       }
-      endTags.push(tag === 'img' ? '' : makeEndTag(tag));
-      // image link
-      if (isImageLink(tag)) {
-        endTags.push(makeEndTag('a'));
-      }
+
       // consumed in first tag
       attrs = [];
+      if (!holder) {
+        holder = parent;
+      }
+      content = parent;
     }
-    endTags.reverse();
 
-    return {
-      openingTag: beginTags.join(''),
-      content: this.getContent(),
-      closingTag: endTags.join(''),
-    };
+    if (content) {
+      content.$attrs$.innerHTML = this.getContent();
+    }
+    return holder;
   }
 
   getContent(): string {
@@ -414,13 +424,17 @@ class OpToHtmlConverter {
     return undefined;
   }
 
-  getTags(): string[] {
+  getTags(): VNode[] {
     let attrs: any = this.op.attributes;
 
     // embeds
     if (!this.op.isText()) {
       return [
-        this.op.isVideo() ? 'iframe' : this.op.isImage() ? 'img' : 'span', // formula
+        this.op.isVideo()
+          ? h('iframe')
+          : this.op.isImage()
+          ? h('img')
+          : h('span'), // formula
       ];
     }
 
@@ -440,17 +454,19 @@ class OpToHtmlConverter {
       let firstItem = item[0]!;
       if (attrs[firstItem]) {
         const customTag = this.getCustomTag(firstItem);
-        return customTag
-          ? [customTag]
-          : firstItem === 'header'
-          ? ['h' + attrs[firstItem]]
-          : [arr.preferSecond(item)!];
+        if (customTag) {
+          return [h(customTag)];
+        }
+        if (firstItem === 'header') {
+          return [h('h' + attrs[firstItem])];
+        }
+        return [h(arr.preferSecond(item)!)];
       }
     }
 
     if (this.op.isCustomTextBlock()) {
       const customTag = this.getCustomTag('renderAsBlock');
-      return customTag ? [customTag] : [positionTag];
+      return customTag ? [h(customTag)] : [h(positionTag)];
     }
 
     // inlines
@@ -474,20 +490,21 @@ class OpToHtmlConverter {
     ];
 
     const inline = inlineTags.filter((item: string[]) => !!attrs[item[0]]);
-    const tags = [
+    const tags: string[][] = [
       ...inline,
       ...Object.keys(customTagsMap)
         .filter((t) => !inlineTags.some((it) => it[0] == t))
         .map((t) => [t, customTagsMap[t]]),
     ];
     return tags.map((item) => {
-      if (customTagsMap[item[0]]) {
-        return customTagsMap[item[0]];
+      const customTag = customTagsMap[item[0]];
+      if (customTag) {
+        return h(customTag);
       }
       if (item[0] === 'script') {
-        return attrs[item[0]] === ScriptType.Sub ? 'sub' : 'sup';
+        return attrs[item[0]] === ScriptType.Sub ? h('sub') : h('sup');
       }
-      return arr.preferSecond(item)!;
+      return h(arr.preferSecond(item));
     });
   }
 }
