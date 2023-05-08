@@ -86,6 +86,9 @@ class InsertOpsConverter {
         insertPropVal[DataType.Formula]
       );
     }
+    if (DataType.Line in insertPropVal) {
+      return new InsertDataQuill(DataType.Line, insertPropVal[DataType.Line]);
+    }
     return new InsertDataCustom(keys[0], insertPropVal[keys[0]]);
   }
 }

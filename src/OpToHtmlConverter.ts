@@ -108,6 +108,14 @@ class OpToHtmlConverter {
       return { openingTag: '', closingTag: '', content: NewLine };
     }
 
+    if (this.op.isLine()) {
+      return {
+        openingTag: '<div class="ql-hr">',
+        closingTag: 'div',
+        content: '',
+      };
+    }
+
     let tags = this.getTags(),
       attrs = this.getTagAttributes();
 

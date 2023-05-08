@@ -2,10 +2,9 @@
  *  Splits by new line character ("\n") by putting new line characters into the
  *  array as well. Ex: "hello\n\nworld\n " => ["hello", "\n", "\n", "world", "\n", " "]
  */
+export const NewLine = '\n';
 
 function tokenizeWithNewLines(str: string): string[] {
-  const NewLine = '\n';
-
   if (str === NewLine) {
     return [str];
   }

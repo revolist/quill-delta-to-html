@@ -138,9 +138,9 @@ class QuillDeltaToHtmlConverter {
   }
 
   convert() {
-    let groups = this.getGroupedOps();
+    const groups = this.getGroupedOps();
     return groups
-      .map((group) => {
+      .map((group, i) => {
         // list
         if (group instanceof ListGroup) {
           return this._renderWithCallbacks(GroupType.List, group, () =>
@@ -289,34 +289,36 @@ class QuillDeltaToHtmlConverter {
   }
 
   _renderInlines(ops: DeltaInsertOp[], isInlineGroup = true) {
-    var opsLen = ops.length - 1;
-    var html = ops
+    const startParaTag = makeStartTag(this.options.paragraphTag);
+    const endParaTag = makeEndTag(this.options.paragraphTag);
+    // const emptyLine = `${startParaTag}${BrTag}${endParaTag}`;
+
+    // const opsLen = ops.length - 1;
+    const html = ops
       .map((op: DeltaInsertOp, i: number) => {
-        if (i > 0 && i === opsLen && op.isJustNewline()) {
-          return '';
-        }
-        return this._renderInline(op, null);
+        // if (i > 0 && i === opsLen && op.isJustNewline()) {
+        //   return '';
+        // }
+        const line = this._renderInline(op, null);
+        // if (this.options.multiLineParagraph) {
+        //   if (line === BrTag) {
+        //     // return emptyLine;
+        //   }
+        // }
+        return line;
       })
       .join('');
     if (!isInlineGroup) {
       return html;
     }
-
-    let startParaTag = makeStartTag(this.options.paragraphTag);
-    let endParaTag = makeEndTag(this.options.paragraphTag);
     if (html === BrTag || this.options.multiLineParagraph) {
-      return startParaTag + html + endParaTag;
+      // html = html.replace(emptyLine, BrTag).replace(BrTag, emptyLine);
+      return `${startParaTag}${html}${endParaTag}`;
     }
-    return (
-      startParaTag +
-      html
-        .split(BrTag)
-        .map((v) => {
-          return v === '' ? BrTag : v;
-        })
-        .join(endParaTag + startParaTag) +
-      endParaTag
-    );
+    return `${startParaTag}${html
+      .split(BrTag)
+      .map((v) => (v === '' ? BrTag : v))
+      .join(`${endParaTag}${startParaTag}`)}${endParaTag}`;
   }
 
   _renderInline(op: DeltaInsertOp, contextOp: DeltaInsertOp | null) {

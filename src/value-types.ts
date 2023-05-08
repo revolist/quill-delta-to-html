@@ -28,6 +28,7 @@ enum DataType {
   Image = 'image',
   Video = 'video',
   Formula = 'formula',
+  Line = 'hr',
   Text = 'text',
 }
 

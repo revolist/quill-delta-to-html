@@ -96,6 +96,10 @@ class DeltaInsertOp {
     return this.insert.value === NewLine;
   }
 
+  isLine() {
+    return this.insert.type === DataType.Line;
+  }
+
   isList() {
     return (
       this.isOrderedList() ||

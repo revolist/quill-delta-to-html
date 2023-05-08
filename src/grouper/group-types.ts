@@ -14,6 +14,7 @@ class SingleItem {
   }
 }
 class VideoItem extends SingleItem {}
+class LineItem extends SingleItem {}
 class BlotBlock extends SingleItem {}
 
 class BlockGroup {
@@ -68,12 +69,14 @@ type TDataGroup =
   | BlockGroup
   | ListItem
   | ListGroup
+  | LineItem
   | TableGroup
   | TableRow
   | TableCell;
 
 export {
   VideoItem,
+  LineItem,
   BlotBlock,
   InlineGroup,
   BlockGroup,
