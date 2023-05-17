@@ -13,7 +13,7 @@ class SingleItem {
     this.op = op;
   }
 }
-class VideoItem extends SingleItem {}
+class IFrameItem extends SingleItem {}
 class LineItem extends SingleItem {}
 class BlotBlock extends SingleItem {}
 
@@ -64,7 +64,7 @@ class TableCell {
 }
 
 type TDataGroup =
-  | VideoItem
+  | IFrameItem
   | InlineGroup
   | BlockGroup
   | ListItem
@@ -75,7 +75,7 @@ type TDataGroup =
   | TableCell;
 
 export {
-  VideoItem,
+  IFrameItem,
   LineItem,
   BlotBlock,
   InlineGroup,

@@ -79,7 +79,7 @@ class DeltaInsertOp {
   isInline() {
     return !(
       this.isContainerBlock() ||
-      this.isVideo() ||
+      this.isIFrame() ||
       this.isCustomEmbedBlock()
     );
   }
@@ -160,8 +160,11 @@ class DeltaInsertOp {
     return this.insert.type === DataType.Formula;
   }
 
-  isVideo() {
-    return this.insert.type === DataType.Video;
+  isIFrame() {
+    return (
+      this.insert.type === DataType.Video ||
+      this.insert.type === DataType.IFrame
+    );
   }
 
   isLink() {

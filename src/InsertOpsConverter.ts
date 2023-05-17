@@ -80,6 +80,15 @@ class InsertOpsConverter {
         )
       );
     }
+    if (DataType.IFrame in insertPropVal) {
+      return new InsertDataQuill(
+        DataType.IFrame,
+        OpLinkSanitizer.sanitize(
+          insertPropVal[DataType.IFrame] + '',
+          sanitizeOptions
+        )
+      );
+    }
     if (DataType.Formula in insertPropVal) {
       return new InsertDataQuill(
         DataType.Formula,

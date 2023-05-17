@@ -6,7 +6,7 @@ import {
   sliceFromReverseWhile,
 } from './../helpers/array';
 import {
-  VideoItem,
+  IFrameItem,
   InlineGroup,
   BlockGroup,
   TDataGroup,
@@ -22,7 +22,7 @@ export function pairOpsWithTheirBlock(ops: DeltaInsertOp[]): TDataGroup[] {
     return !(
       op.isJustNewline() ||
       op.isCustomEmbedBlock() ||
-      op.isVideo() ||
+      op.isIFrame() ||
       op.isContainerBlock()
     );
   };
@@ -37,9 +37,9 @@ export function pairOpsWithTheirBlock(ops: DeltaInsertOp[]): TDataGroup[] {
   for (let i = lastInd; i >= 0; i--) {
     let op = ops[i];
 
-    // Video, add a VideoItem
-    if (op.isVideo()) {
-      result.push(new VideoItem(op));
+    // IFrame
+    if (op.isIFrame()) {
+      result.push(new IFrameItem(op));
     }
     // Custom embed block, add a BlotBlock
     else if (op.isCustomEmbedBlock()) {

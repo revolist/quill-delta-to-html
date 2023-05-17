@@ -27,6 +27,7 @@ enum AlignType {
 enum DataType {
   Image = 'image',
   Video = 'video',
+  IFrame = 'iframe',
   Formula = 'formula',
   Line = 'hr',
   Text = 'text',
@@ -36,7 +37,7 @@ enum GroupType {
   Block = 'block',
   InlineGroup = 'inline-group',
   List = 'list',
-  Video = 'video',
+  IFrame = 'iframe',
   Table = 'table',
 }
 

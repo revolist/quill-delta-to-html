@@ -199,7 +199,7 @@ class OpToHtmlConverter {
         )
         .map((prop) => prop + '-' + attrs[prop])
         .concat(this.op.isFormula() ? 'formula' : [])
-        .concat(this.op.isVideo() ? 'video' : [])
+        .concat(this.op.isIFrame() ? 'iframe' : [])
         .concat(this.op.isImage() ? 'image' : [])
         .map(<Str2StrType>this.prefixClass.bind(this))
     );
@@ -290,8 +290,8 @@ class OpToHtmlConverter {
     if (this.op.isFormula()) {
       return tagAttrs;
     }
-    // VIDEO
-    if (this.op.isVideo()) {
+    // IFrame
+    if (this.op.isIFrame()) {
       return tagAttrs.concat(
         makeAttr('frameborder', '0'),
         makeAttr('allowfullscreen', 'true'),
@@ -428,7 +428,7 @@ class OpToHtmlConverter {
     // embeds
     if (!this.op.isText()) {
       return [
-        this.op.isVideo() ? 'iframe' : this.op.isImage() ? 'img' : 'span', // formula
+        this.op.isIFrame() ? 'iframe' : this.op.isImage() ? 'img' : 'span', // formula
       ];
     }
 
