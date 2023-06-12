@@ -178,6 +178,52 @@ class QuillDeltaToHtmlConverter {
       .join('');
   }
 
+  getGroupedDelta() {
+    const groups = this.getGroupedOps();
+
+    function getOrigin(op: DeltaInsertOp) {
+      return op.origin;
+    }
+
+    function getOriginList(ops: DeltaInsertOp[], parent: DeltaInsertOp) {
+      return ops.reduce((acc: any[], op) => {
+        if (!op.origin) {
+          return acc;
+        }
+        acc.push(getOrigin(op), getOrigin(parent));
+        return acc;
+      }, []);
+    }
+
+    return groups.map((group) => {
+      // list
+      if (group instanceof ListGroup) {
+        return group.items.flatMap((li) => {
+          return getOriginList(li.item.ops, li.item.op);
+        });
+        // table
+      } else if (group instanceof TableGroup) {
+        return group.rows.flatMap((row) => {
+          return row.cells.flatMap((cell) => {
+            return cell.item.ops.map(getOrigin);
+          });
+        });
+        // block
+      } else if (group instanceof BlockGroup) {
+        return getOriginList(group.ops, group.op);
+      } else if (group instanceof BlotBlock) {
+        return [getOrigin(group.op)];
+        // video
+      } else if (group instanceof IFrameItem) {
+        return [getOrigin(group.op)];
+      } else {
+        // InlineGroup
+        const g = <InlineGroup>group;
+        return g.ops.map(getOrigin);
+      }
+    });
+  }
+
   // todo: support through virtual dom
   // required to provide event handlers
   convertVnode(

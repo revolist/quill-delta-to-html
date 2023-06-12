@@ -7,7 +7,11 @@ class DeltaInsertOp {
   readonly insert: InsertData;
   readonly attributes: IOpAttributes;
 
-  constructor(insertVal: InsertData | string, attrs?: IOpAttributes) {
+  constructor(
+    insertVal: InsertData | string,
+    attrs?: IOpAttributes,
+    public origin?: any
+  ) {
     if (typeof insertVal === 'string') {
       insertVal = new InsertDataQuill(DataType.Text, insertVal + '');
     }

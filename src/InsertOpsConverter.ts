@@ -39,7 +39,7 @@ class InsertOpsConverter {
       }
 
       attributes = OpAttributeSanitizer.sanitize(op.attributes, options);
-      results.push(new DeltaInsertOp(insertVal, attributes));
+      results.push(new DeltaInsertOp(insertVal, attributes, op));
     }
     return results;
   }

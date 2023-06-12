@@ -86,4 +86,5 @@ export {
   TableRow,
   TableCell,
   TDataGroup,
+  SingleItem,
 };
