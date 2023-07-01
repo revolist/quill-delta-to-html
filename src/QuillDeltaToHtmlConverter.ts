@@ -28,7 +28,6 @@ import * as obj from './helpers/object';
 import { GroupType } from './value-types';
 import { IOpAttributeSanitizerOptions } from './OpAttributeSanitizer';
 import { TableGrouper } from './grouper/TableGrouper';
-import { h } from '@stencil/core';
 
 interface IQuillDeltaToHtmlConverterOptions
   extends IOpAttributeSanitizerOptions,
@@ -94,6 +93,7 @@ class QuillDeltaToHtmlConverter {
       linkRel: this.options.linkRel,
       linkTarget: this.options.linkTarget,
       allowBackgroundClasses: this.options.allowBackgroundClasses,
+      customCssClassesProps: this.options.customCssClassesProps,
       customTag: this.options.customTag,
       customTagAttributes: this.options.customTagAttributes,
       customCssClasses: this.options.customCssClasses,
@@ -220,88 +220,6 @@ class QuillDeltaToHtmlConverter {
         // InlineGroup
         const g = <InlineGroup>group;
         return g.ops.map(getOrigin);
-      }
-    });
-  }
-
-  // todo: support through virtual dom
-  // required to provide event handlers
-  convertVnode(
-    classes = {
-      'ql-editor': true,
-      'ql-container': true,
-      'cell-content': true,
-    }
-  ) {
-    const groups = this.getGroupedOps();
-    return groups.map((group) => {
-      // list
-      if (group instanceof ListGroup) {
-        return h('div', {
-          innerHTML: this._renderList(<ListGroup>group),
-          class: classes,
-        });
-        // table
-      } else if (group instanceof TableGroup) {
-        return h('div', {
-          innerHTML: this._renderTable(<TableGroup>group),
-          class: classes,
-        });
-        // block
-      } else if (group instanceof BlockGroup) {
-        return h('div', {
-          innerHTML: this._renderBlock(group.op, group.ops),
-          class: classes,
-        });
-      } else if (group instanceof BlotBlock) {
-        return h('div', {
-          innerHTML: this._renderCustom(group.op, null),
-          class: classes,
-        });
-        // video
-      } else if (group instanceof IFrameItem) {
-        const style = group.op.attributes.style
-          ?.split(';')
-          .reduce((styles: Record<string, string>, item: string) => {
-            let [key, value] = item.split(':');
-            key = key.trim();
-            value = value.trim();
-            if (key === 'width') {
-              value = '100%';
-            }
-            if (key && value) {
-              styles[key] = value;
-            }
-            return styles;
-          }, {});
-        return h(
-          'div',
-          {
-            class: {
-              ...classes,
-              'ql-frame-holder': true,
-            },
-          },
-          [
-            h('iframe', {
-              // innerHTML: converter.getHtml(),
-              src: group.op.insert.value,
-
-              class: {
-                'ql-frame': true,
-              },
-              frameborder: 0,
-              allowfullscreen: false,
-              style,
-            }),
-          ]
-        );
-      } else {
-        // InlineGroup
-        return h('div', {
-          innerHTML: this._renderInlines((<InlineGroup>group).ops, true),
-          class: classes,
-        });
       }
     });
   }

@@ -1,4 +1,4 @@
-interface ITagKeyValue {
+export interface ITagKeyValue {
   key: string;
   value?: string;
 }
@@ -8,7 +8,18 @@ enum EncodeTarget {
   Url = 1,
 }
 
-function makeStartTag(
+function getAttr(attrs?: ITagKeyValue | ITagKeyValue[]) {
+  let attrsStr = '';
+  if (attrs) {
+    const arrAttrs = ([] as ITagKeyValue[]).concat(attrs);
+    attrsStr = arrAttrs
+      .map((attr) => `${attr.key}${attr.value ? `="${attr.value}"` : ''}`)
+      .join(' ');
+  }
+  return attrsStr;
+}
+
+export function makeStartTag(
   tag: any,
   attrs: ITagKeyValue | ITagKeyValue[] | undefined = undefined
 ) {
@@ -16,39 +27,33 @@ function makeStartTag(
     return '';
   }
 
-  var attrsStr = '';
-  if (attrs) {
-    var arrAttrs = ([] as ITagKeyValue[]).concat(attrs);
-    attrsStr = arrAttrs
-      .map(function (attr: any) {
-        return attr.key + (attr.value ? '="' + attr.value + '"' : '');
-      })
-      .join(' ');
-  }
-
-  var closing = '>';
-  if (tag === 'img' || tag === 'br') {
+  let closing = '>';
+  const attrsStr = getAttr(attrs);
+  if (tag === 'img') {
     closing = '/>';
   }
-  return attrsStr ? `<${tag} ${attrsStr}${closing}` : `<${tag}${closing}`;
+  if (tag === 'br') {
+    closing = '/>';
+  }
+  return `<${tag}${attrsStr ? ` ${attrsStr}` : ''}${closing}`;
 }
 
-function makeEndTag(tag: any = '') {
+export function makeEndTag(tag: any = '') {
   return (tag && `</${tag}>`) || '';
 }
 
-function decodeHtml(str: string) {
+export function decodeHtml(str: string) {
   return encodeMappings(EncodeTarget.Html).reduce(decodeMapping, str);
 }
 
-function encodeHtml(str: string, preventDoubleEncoding = true) {
+export function encodeHtml(str: string, preventDoubleEncoding = true) {
   if (preventDoubleEncoding) {
     str = decodeHtml(str);
   }
   return encodeMappings(EncodeTarget.Html).reduce(encodeMapping, str);
 }
 
-function encodeLink(str: string) {
+export function encodeLink(str: string) {
   let linkMaps = encodeMappings(EncodeTarget.Url);
   let decoded = linkMaps.reduce(decodeMapping, str);
   return linkMaps.reduce(encodeMapping, decoded);
@@ -80,11 +85,3 @@ function encodeMapping(str: string, mapping: string[]) {
 function decodeMapping(str: string, mapping: string[]) {
   return str.replace(new RegExp(mapping[1], 'g'), mapping[0].replace('\\', ''));
 }
-export {
-  makeStartTag,
-  makeEndTag,
-  encodeHtml,
-  decodeHtml,
-  encodeLink,
-  ITagKeyValue,
-};

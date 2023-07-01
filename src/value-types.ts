@@ -29,7 +29,7 @@ enum DataType {
   Video = 'video',
   IFrame = 'iframe',
   Formula = 'formula',
-  Line = 'hr',
+  Line = 'divider',
   Text = 'text',
 }
 

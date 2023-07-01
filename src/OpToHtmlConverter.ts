@@ -60,9 +60,10 @@ interface IOpToHtmlConverterOptions {
   linkRel?: string;
   linkTarget?: string;
   allowBackgroundClasses?: boolean;
+  customCssClassesProps?: string[];
+  customCssClasses?: (op: DeltaInsertOp) => string | string[] | void;
   customTag?: (format: string, op: DeltaInsertOp) => string | void;
   customTagAttributes?: (op: DeltaInsertOp) => { [key: string]: string } | void;
-  customCssClasses?: (op: DeltaInsertOp) => string | string[] | void;
   customCssStyles?: (op: DeltaInsertOp) => string | string[] | void;
 }
 
@@ -132,11 +133,24 @@ class OpToHtmlConverter {
       tag === imgTag && !!this.op.attributes.link;
 
     for (let tag of tags) {
-      // image
+      // image link
       if (isImageLink(tag)) {
         beginTags.push(makeStartTag('a', this.getLinkAttrs()));
       }
-      beginTags.push(makeStartTag(tag, attrs));
+
+      // if image add exta element for options
+      if (tag === imgTag) {
+        beginTags.push('<span class="ql-image-container">');
+        beginTags.push('<span class="ql-image-holder">');
+        beginTags.push(makeStartTag(tag, attrs));
+        beginTags.push('</span>');
+        beginTags.push(
+          '<button class="v-btn v-btn--round theme--light v-size--small v-btn--icon ql-image-options"></button>'
+        );
+        endTags.push('</span>');
+      } else {
+        beginTags.push(makeStartTag(tag, attrs));
+      }
       // list
       if (this.op.isList()) {
         beginTags.push(
@@ -144,7 +158,10 @@ class OpToHtmlConverter {
           makeEndTag('span')
         );
       }
-      endTags.push(tag === 'img' ? '' : makeEndTag(tag));
+      // image is self closing
+      if (tag !== imgTag) {
+        endTags.push(makeEndTag(tag));
+      }
       // image link
       if (isImageLink(tag)) {
         endTags.push(makeEndTag('a'));
@@ -179,30 +196,31 @@ class OpToHtmlConverter {
   getCssClasses(): string[] {
     let attrs: any = this.op.attributes;
 
-    type Str2StrType = { (x: string): string };
-
     if (this.options.inlineStyles) {
       return [];
     }
 
-    let propsArr = ['indent', 'align', 'direction', 'font', 'size'];
+    const propsArr = ['indent', 'align', 'direction', 'font', 'size'];
     if (this.options.allowBackgroundClasses) {
       propsArr.push('background');
     }
-    return (this.getCustomCssClasses() || []).concat(
-      propsArr
-        .filter((prop) => !!attrs[prop])
-        .filter((prop) =>
-          prop === 'background'
-            ? OpAttributeSanitizer.IsValidColorLiteral(attrs[prop])
-            : true
-        )
-        .map((prop) => prop + '-' + attrs[prop])
-        .concat(this.op.isFormula() ? 'formula' : [])
-        .concat(this.op.isIFrame() ? 'iframe' : [])
-        .concat(this.op.isImage() ? 'image' : [])
-        .map(<Str2StrType>this.prefixClass.bind(this))
-    );
+    if (this.options.customCssClassesProps) {
+      propsArr.push(...this.options.customCssClassesProps);
+    }
+    const customClasses = this.getCustomCssClasses() || [];
+    const props = propsArr
+      .filter((prop) => !!attrs[prop])
+      .filter((prop) =>
+        prop === 'background'
+          ? OpAttributeSanitizer.IsValidColorLiteral(attrs[prop])
+          : true
+      )
+      .map((prop) => prop + '-' + attrs[prop])
+      .concat(this.op.isFormula() ? 'formula' : [])
+      .concat(this.op.isIFrame() ? 'iframe' : [])
+      .concat(this.op.isImage() ? 'image' : [])
+      .map(this.prefixClass.bind(this));
+    return [...customClasses, ...props];
   }
 
   getCssStyles(): string[] {
@@ -397,10 +415,10 @@ class OpToHtmlConverter {
   }
 
   getCustomCssClasses() {
-    if (
-      this.options.customCssClasses &&
-      typeof this.options.customCssClasses === 'function'
-    ) {
+    if (!this.options.customCssClasses) {
+      return undefined;
+    }
+    if (typeof this.options.customCssClasses === 'function') {
       const res = this.options.customCssClasses.apply(null, [this.op]);
       if (res) {
         return Array.isArray(res) ? res : [res];
